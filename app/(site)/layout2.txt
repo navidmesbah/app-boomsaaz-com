@@ -1,0 +1,66 @@
+import Link from "next/link"
+
+import { ThemeToggle } from "@/components/theme-toggle"
+import { SignIn } from "@phosphor-icons/react/dist/ssr";
+import { Button } from "@/components/ui/button";
+// import { User } from "@phosphor-icons/react/dist/ssr"
+
+interface ChatLayoutProps {
+  children: React.ReactNode;
+  params: {
+    id: string;
+  };
+}
+
+export default async function ChatLayout({ children, params }: ChatLayoutProps) {
+  return (
+    <div className="flex min-h-screen w-full flex-col">
+      {/* <header className="sticky top-0 border-b bg-background px-4"> */}
+      <header className="sticky top-0 bg-background px-4 z-50">
+        <div className="mx-auto w-full max-w-full md:max-w-[1024px] flex items-center h-11 gap-4">
+          <Link
+            href="/"
+            className="flex items-center h-11 gap-2 font-semibold min-w-fit"
+          >
+            <span className="min-w-fit">بوم ساز</span>
+          </Link>
+          <div className="flex items-center h-11 mr-auto">
+            {/* <Button variant="ghost" size="icon" asChild>
+              <Link href="/playground">
+                <SignIn className="size-5" />
+                <span className="sr-only">Enter playground</span>
+              </Link>
+            </Button> */}
+            {/* <Button variant="ghost" asChild className="hidden md:inline-flex md:text-muted-foreground md:hover:text-foreground"> */}
+            <Button variant="ghost" asChild className="text-muted-foreground hover:text-foreground">
+              <Link href="/playground">
+                <span className="ml-1 -mt-0.5">بوستان</span>
+                <SignIn className="size-5 rotate-180" />
+                {/* <span className="sr-only">Enter playground</span> */}
+              </Link>
+            </Button>
+            {/* <ThemeToggle /> */}
+          </div>
+        </div>
+      </header>
+      <div className="fixed w-full bottom-4">
+        <div className="flex justify-end w-full max-w-[1024px] mx-auto pl-4">
+          <ThemeToggle />
+        </div>
+      </div>
+      <main className="flex min-h-[calc(100vh_-_theme(spacing.16))] flex-1 flex-col bg-muted/40">
+        {children}
+      </main>
+    </div>
+  )
+}
+
+interface routesType {
+  simulation: string[];
+  research: string[];
+}
+
+const routes: routesType = {
+  simulation: ["markets", "news"],
+  research: ["chat", "trends"],
+}

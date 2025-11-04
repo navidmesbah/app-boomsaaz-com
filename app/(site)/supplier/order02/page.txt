@@ -1,0 +1,237 @@
+import Link from "next/link"
+// import Image from "next/image"
+import React from "react"
+
+import { Button } from "@/components/ui/button"
+import { SubmitButton } from './button'
+// import { Checkbox } from "@/components/ui/checkbox"
+// import { SignIn } from "@phosphor-icons/react/dist/ssr"
+
+import {
+  Card,
+  CardContent,
+  // CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { NumberInput } from "@/components/ui/input-number"
+import { Label } from "@/components/ui/label"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+// import {
+//   Select,
+//   SelectContent,
+//   SelectItem,
+//   SelectTrigger,
+//   SelectValue,
+// } from "@/components/ui/select"
+
+import {
+  Box,
+  Flex,
+  Text,
+  RadioCards
+} from "@radix-ui/themes";
+
+import { saveBuyOrder } from '@/lib/db/queries';
+
+export default async function Analytics() {
+  async function createOrder(formData: FormData) {
+    'use server'
+
+    const rawFormData = {
+      price: formData.get('price') as string,
+    }
+
+    // console.log("price", rawFormData.price)
+    await saveBuyOrder({
+      userId: "c37aff15-a0cb-4ad2-9cc7-70c5b85f2f25",
+      tradingPairId: "2bca4b60-1c6b-423a-b181-4a01cbddf0ea",
+      locationId: "579f3ab4-ea21-4e71-b73a-64b05aea9a75",
+      side: 'b',
+      price: '90000',
+      city: "tehtran",
+      unit: "packet",
+      volume: "40",
+      status: "payed"
+    })
+
+    // mutate data
+    // revalidate cache
+  }
+
+  // const orders = await getBuyOrders();
+
+
+  return (
+    <div>
+      <form action={createOrder}>
+        <Card className="max-w-[600px] mx-auto my-4">
+          <CardHeader>
+            <CardTitle style={{ color: "red" }}>سفارش فروش</CardTitle>
+            {/* <CardDescription>با انتخاب آدرس دقیق، قیمت تمام شده دقیق محاسبه می گردد.</CardDescription> */}
+          </CardHeader>
+          <CardContent>
+            <div className="grid w-full items-center gap-4">
+              <div className="flex flex-col space-y-1.5">
+                <Label htmlFor="name">آدرس انبار کالا:</Label>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline">شیراز، پاسارگاد شمالی...</Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>آدرس های منتخب</DialogTitle>
+                      <DialogDescription>
+                        لیست آدرس های منتخب شما
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      {/* <div className="grid grid-cols-4 items-center gap-4"> */}
+                      <div className="grid items-center">
+                        {/* <Label htmlFor="one" className="text-right">
+                          Name
+                        </Label> */}
+                        <Input
+                          id="one"
+                          defaultValue="شیراز، پاسارگاد شمالی"
+                        // className="col-span-3"
+                        />
+                      </div>
+                      {/* <div className="grid grid-cols-4 items-center gap-4"> */}
+                      <div className="grid items-center">
+                        {/* <Label htmlFor="two" className="text-right">
+                          Username
+                        </Label> */}
+                        <Input
+                          id="two"
+                          defaultValue="بوشهر، میدان نخلستان"
+                        // className="col-span-3"
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button>انتخاب آدرس</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+              <Text>
+                کالا:
+              </Text>
+              <Box>
+                {/* <RadioCards.Root defaultValue="1" columns={{ initial: "1", sm: "2" }} dir="rtl"> */}
+                <RadioCards.Root defaultValue="1" columns="2" dir="rtl" color="red">
+                  <RadioCards.Item value="1">
+                    <Flex direction="column" width="100%">
+                      <Text weight="bold">سیمان</Text>
+                      <Text>پاکتی/ یا تناژ</Text>
+                    </Flex>
+                  </RadioCards.Item>
+                  <RadioCards.Item value="2" disabled>
+                    <Flex direction="column" width="100%">
+                      <Text weight="bold">پودر سنگ</Text>
+                      <Text>پاکتی/ یا تناژ</Text>
+                    </Flex>
+                  </RadioCards.Item>
+                  <RadioCards.Item value="3" disabled>
+                    <Flex direction="column" width="100%">
+                      <Text weight="bold">ماسه</Text>
+                      <Text>یک کامیون/ یا تناژ</Text>
+                    </Flex>
+                  </RadioCards.Item>
+                  <RadioCards.Item value="4" disabled>
+                    <Flex direction="column" width="100%">
+                      <Text weight="bold">آجر</Text>
+                      <Text>یک کامیون/ یا تناژ</Text>
+                    </Flex>
+                  </RadioCards.Item>
+                  <RadioCards.Item value="5" disabled>
+                    <Flex direction="column" width="100%">
+                      <Text weight="bold">آب</Text>
+                      <Text>تانکر</Text>
+                    </Flex>
+                  </RadioCards.Item>
+                </RadioCards.Root>
+              </Box>
+              <Text>
+                واحد:
+              </Text>
+              <Box>
+                {/* <RadioCards.Root defaultValue="1" columns={{ initial: "1", sm: "2" }} dir="rtl"> */}
+                <RadioCards.Root defaultValue="1" columns="2" dir="rtl" color="red">
+                  <RadioCards.Item value="1">
+                    <Flex direction="column" width="100%">
+                      <Text weight="bold">پاکت</Text>
+                      <Text>توضیحات بیشتر</Text>
+                    </Flex>
+                  </RadioCards.Item>
+                  <RadioCards.Item value="2" disabled>
+                    <Flex direction="column" width="100%">
+                      <Text weight="bold">تناژ</Text>
+                      <Text>توضیحات بیشتر</Text>
+                    </Flex>
+                  </RadioCards.Item>
+                </RadioCards.Root>
+              </Box>
+              <NumberInput title="پاکت" />
+              <Text>
+                قیمت هر پاکت:
+              </Text>
+              <Input name="price" />
+            </div>
+            {/* <Button className="my-2 w-full">جستجوی کالا</Button> */}
+            {/* <div className="max-w-[600px] mx-auto mt-4 px-4"> */}
+            <Flex direction="column" gap="3" maxWidth="600px" className="mx-auto pt-8">
+              {/* <Text>
+              لیست فروش:
+              </Text> */}
+              <RadioCards.Root defaultValue="1" color="indigo" columns={{ initial: "1", sm: "1" }} dir="rtl">
+                {/* <RadioCards.Root defaultValue="0" color="indigo" dir="rtl"> */}
+                {/* <div className="flex justify-center items-center h-12 border border-dashed text-muted-foreground">لیست مناسب ترین کالاها برای شما!</div> */}
+                {/* <RadioCards.Item value="1">
+                <Flex direction="column" width="100%">
+                <Text weight="bold">سیمان فارس - ۹۲۰۰۰ تومان</Text>
+                <Text>فروشگاه مصالح عباس پور</Text>
+                </Flex>
+                </RadioCards.Item>
+                <RadioCards.Item value="2">
+                <Flex direction="column" width="100%">
+                <Text weight="bold">سیمان فارس - ۹۳۰۰۰ تومان</Text>
+                <Text>فروشگاه مصالح هاشمی</Text>
+                </Flex>
+                </RadioCards.Item>
+                <RadioCards.Item value="3">
+                <Flex direction="column" width="100%">
+                <Text weight="bold">سیمان فیروزآباد - ۹۸۰۰۰ تومان</Text>
+                <Text>فروشگاه مصالح آریا</Text>
+                </Flex>
+                </RadioCards.Item> */}
+              </RadioCards.Root>
+            </Flex>
+            {/* </div> */}
+          </CardContent>
+          <CardFooter className="flex justify-between">
+            {/* <Button variant="outline">لغو سفارش</Button> */}
+            <div />
+            <SubmitButton />
+          </CardFooter>
+        </Card>
+      </form>
+      {/* <ul className="max-w-[600px] mx-auto my-4">
+        {orders.map((order) => (
+          <li key={order.id}>{order.id}</li>
+        ))}
+      </ul> */}
+    </div>
+  )
+}

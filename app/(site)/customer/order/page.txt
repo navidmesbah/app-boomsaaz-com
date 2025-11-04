@@ -1,0 +1,692 @@
+// @ts-nocheck
+
+"use client"
+
+import React, { useState, useEffect, useCallback, useRef } from "react"
+import Link from "next/link"
+// import Image from "next/image"
+import { Map, Marker, MapRef, GeolocateControl } from '@vis.gl/react-maplibre';
+import 'maplibre-gl/dist/maplibre-gl.css'; // See notes below
+
+import maplibregl from 'maplibre-gl';
+import { GeocodingControl } from "@maptiler/geocoding-control/react";
+import { createMapLibreGlMapController } from "@maptiler/geocoding-control/maplibregl-controller";
+import "@maptiler/geocoding-control/style.css";
+
+import { MapPin } from "lucide-react";
+
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
+
+import { Button } from "@/components/ui/button"
+import { SubmitButton } from './button'
+import { Input } from "@/components/ui/input"
+// import {
+//   Form,
+//   FormControl,
+//   FormDescription,
+//   FormField,
+//   FormItem,
+//   FormLabel,
+//   FormMessage,
+// } from "@/components/ui/form"
+// import { Input } from "@/components/ui/input"
+
+// import { Checkbox } from "@/components/ui/checkbox"
+// import { SignIn } from "@phosphor-icons/react/dist/ssr"
+
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+// import { NumberInput } from "@/components/ui/input-number"
+import { Label } from "@/components/ui/label"
+
+// import { findBestsupplier } from '@/lib/db/queries';
+// import {
+//   Dialog,
+//   DialogContent,
+//   DialogDescription,
+//   DialogFooter,
+//   DialogHeader,
+//   DialogTitle,
+//   DialogTrigger,
+// } from "@/components/ui/dialog"
+// import {
+//   Select,
+//   SelectContent,
+//   SelectItem,
+//   SelectTrigger,
+//   SelectValue,
+// } from "@/components/ui/select"
+
+import {
+  Box,
+  Flex,
+  Text,
+  RadioCards
+} from "@radix-ui/themes";
+
+// import { getBuyOrders } from "@/lib/db/queries"
+
+const formSchema = z.object({
+  username: z.string().min(2, {
+    message: "Username must be at least 2 characters.",
+  }),
+})
+
+import { create, findBestsupplier } from './actions'
+import { Separator } from "@/components/ui/separator";
+
+const API_KEY = 'l2lhfToTYDJSlIPhOJ7E'
+
+export default function Analytics() {
+  // const orders = await getBuyOrders();
+  // const [orders, setOrders] = useState([{ id: "1", price: 87000 }, { id: "2", price: 90000 }, { id: "3", price: 92000 }])
+  const [addressType, setAddressType] = useState("map")
+  const [volume, setVolume] = useState("5")
+  const [city, setCity] = useState("تهران")
+  const [type, setType] = useState("فارس")
+  const [fare, setFare] = useState(120000)
+  const [farsPrice, setFarsPrice] = useState(89000)
+  const [abyekPrice, setAbyekPrice] = useState(97000)
+  const [larPrice, setLarPrice] = useState(189000)
+  const [lng, setLng] = useState(51.33808144535957)
+  const [lat, setLat] = useState(35.6997281290379)
+  const [suppliers, setSuppliers] = useState([])
+  const [loading, setLoading] = useState(false)
+
+  const [mapController, setMapController] = useState();
+
+  const mapRef = useRef<MapRef>();
+
+  const onMapLoad = useCallback(() => {
+    const map = mapRef.current.getMap(); // Access the underlying MapLibre map instance
+    // console.log("onLoad-map", map)
+    setMapController(createMapLibreGlMapController(map, maplibregl));
+  }, []);
+
+
+  const onCityChange = useCallback((value: any) => {
+    setCity(value)
+
+    if (city === "شیراز") {
+      setFare(120000)
+      setLng(51.33808144535957)
+      setLat(35.6997281290379)
+    } else {
+      setFare(75000)
+      setLng(52.51980110816994)
+      setLat(29.63149899491558)
+    }
+
+    if (city === "شیراز") {
+      setFarsPrice(89000)
+      setAbyekPrice(97000)
+      setLarPrice(189000)
+    } else {
+      setFarsPrice(87000)
+      setAbyekPrice(94000)
+      setLarPrice(187000)
+    }
+    // console.log("onCityChange")
+    // console.log("value", value)
+
+    const map = {
+      "شیراز": [51.33808144535957, 35.6997281290379],
+      "تهران": [52.51980110816994, 29.63149899491558]
+    } as any
+
+    // console.log(map[city])
+
+    mapRef.current?.flyTo({ center: map[city], duration: 2000 });
+    // setMapController(createMapLibreGlMapController(mapRef.current, maplibregl));
+    // console.log("mapController", mapController)
+  }, [city]);
+
+  function onConfirmAddress() {
+    if (mapRef.current) {
+      const center = mapRef.current?.getCenter();
+      // console.log("Longitude:", center.lng, "Latitude:", center.lat);
+      setLng(center.lng)
+      setLat(center.lat)
+
+      mapRef.current?.flyTo({ center: [center.lng, center.lat - 0.001], duration: 1000 });
+      // alert(`Center: Longitude: ${center.lng}, Latitude: ${center.lat}`);
+      // alert(position)
+    }
+  }
+
+  // useEffect(() => {
+  //   async function fetchOrders() {
+  //     // const res = await fetch('https://api.vercel.app/blog')
+  //     const orders = await getBuyOrders();
+  //     // const data = await res.json()
+  //     setOrders(orders)
+  //   }
+  //   fetchOrders()
+  // }, [])
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      username: "",
+    },
+  })
+
+  // 2. Define a submit handler.
+  function onSubmit(values: z.infer<typeof formSchema>) {
+    // Do something with the form values.
+    // ✅ This will be type-safe and validated.
+    console.log(values)
+  }
+
+  function onChange(value: any) {
+    // console.log(value)
+    setAddressType(value)
+  }
+
+  function onVolumeChange(value: any) {
+    // console.log(value)
+    setVolume(value)
+  }
+
+  function onTypeChange(value: any) {
+    // console.log(value)
+    setType(value)
+
+    // if (city === "شیراز") {
+    //   setFarsPrice(89000)
+    //   setAbyekPrice(97000)
+    //   setLarPrice(189000)
+    // } else {
+    //   setFarsPrice(87000)
+    //   setAbyekPrice(94000)
+    //   setLarPrice(187000)
+    // }
+  }
+
+  const createOrderWithPosition = create.bind(null, lng, lat)
+
+  const findBestSupplierWithPosition = findBestsupplier.bind(null, {
+    status: 'idle',
+    suppliers: []
+  })
+
+  async function handleFindSuppliers() {
+    setLoading(true);
+    const formData = new FormData();
+    formData.append('buyerLng', lng.toString());
+    formData.append('buyerLat', lat.toString());
+    
+    const result = await findBestSupplierWithPosition(formData);
+    if (result.status === 'success' && result.suppliers) {
+      setSuppliers(result.suppliers);
+    }
+    setLoading(false);
+  }
+
+  return (
+    <form action={createOrderWithPosition}>
+      {/* <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <FormField
+            control={form.control}
+            name="username"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Username</FormLabel>
+                <FormControl>
+                  <Input placeholder="shadcn" {...field} />
+                </FormControl>
+                <FormDescription>
+                  This is your public display name.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button type="submit">Submit</Button>
+        </form>
+      </Form> */}
+      <Card className="max-w-[600px] mx-auto my-4">
+        <CardHeader>
+          <CardTitle style={{ color: "green" }}>سفارش خرید</CardTitle>
+          <CardDescription>انتخاب کالا</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {/* <form> */}
+          <div className="grid w-full items-center gap-2 mt-4">
+            {/* <div className="flex flex-col space-y-1.5"> */}
+            <Label htmlFor="name" className="text-md font-bold">شهر تحویل کالا:</Label>
+            <Box>
+              {/* <RadioCards.Root defaultValue="1" columns={{ initial: "1", sm: "2" }} dir="rtl"> */}
+              <RadioCards.Root defaultValue="تهران" onValueChange={value => onCityChange(value)} columns="2" dir="rtl" color="green" name="city">
+                <RadioCards.Item value="تهران">
+                  <Flex direction="column" width="100%">
+                    <Text weight="bold">تهران</Text>
+                    {/* <Text>پاکت/ یا تناژ</Text> */}
+                  </Flex>
+                </RadioCards.Item>
+                <RadioCards.Item value="شیراز">
+                  <Flex direction="column" width="100%">
+                    <Text weight="bold">شیراز</Text>
+                    {/* <Text>پاکت/ یا تناژ</Text> */}
+                  </Flex>
+                </RadioCards.Item>
+                <RadioCards.Item value="3" disabled>
+                  <Flex direction="column" width="100%">
+                    <Text weight="bold">بوشهر</Text>
+                    {/* <Text>یک کامیون/ یا تناژ</Text> */}
+                  </Flex>
+                </RadioCards.Item>
+                <RadioCards.Item value="4" disabled>
+                  <Flex direction="column" width="100%">
+                    <Text weight="bold">بندرعباس</Text>
+                    {/* <Text>یک کامیون/ یا تناژ</Text> */}
+                  </Flex>
+                </RadioCards.Item>
+                <RadioCards.Item value="5" disabled>
+                  <Flex direction="column" width="100%">
+                    <Text weight="bold">اصفهان</Text>
+                    {/* <Text>تانکر</Text> */}
+                  </Flex>
+                </RadioCards.Item>
+              </RadioCards.Root>
+            </Box>
+            {/* </div> */}
+            <Text size="4" weight="bold" className="mt-8">
+              کالا:
+            </Text>
+            <Box>
+              {/* <RadioCards.Root defaultValue="1" columns={{ initial: "1", sm: "2" }} dir="rtl"> */}
+              <RadioCards.Root defaultValue="1" columns="2" dir="rtl" color="green">
+                <RadioCards.Item value="1">
+                  <Flex direction="column" width="100%">
+                    <Text weight="bold">سیمان</Text>
+                    <Text>پاکت/ یا تناژ</Text>
+                  </Flex>
+                </RadioCards.Item>
+                <RadioCards.Item value="2" disabled>
+                  <Flex direction="column" width="100%">
+                    <Text weight="bold">پودر سنگ</Text>
+                    <Text>پاکت/ یا تناژ</Text>
+                  </Flex>
+                </RadioCards.Item>
+                <RadioCards.Item value="3" disabled>
+                  <Flex direction="column" width="100%">
+                    <Text weight="bold">ماسه</Text>
+                    <Text>یک کامیون/ یا تناژ</Text>
+                  </Flex>
+                </RadioCards.Item>
+                <RadioCards.Item value="4" disabled>
+                  <Flex direction="column" width="100%">
+                    <Text weight="bold">آجر</Text>
+                    <Text>یک کامیون/ یا تناژ</Text>
+                  </Flex>
+                </RadioCards.Item>
+                <RadioCards.Item value="5" disabled>
+                  <Flex direction="column" width="100%">
+                    <Text weight="bold">آب</Text>
+                    <Text>تانکر</Text>
+                  </Flex>
+                </RadioCards.Item>
+              </RadioCards.Root>
+            </Box>
+            <Text size="4" weight="bold" className="mt-8">
+              نوع:
+            </Text>
+            <Box>
+              {/* <RadioCards.Root defaultValue="1" columns={{ initial: "1", sm: "2" }} dir="rtl"> */}
+              <RadioCards.Root defaultValue="فارس" onValueChange={value => onTypeChange(value)} columns="2" dir="rtl" color="green" name="unit">
+                <RadioCards.Item value="فارس">
+                  <Flex direction="column" width="100%">
+                    <Text weight="bold">سیمان پاکتی فارس</Text>
+                    <Text>قیمت هر پاکت: {farsPrice} تومان</Text>
+                  </Flex>
+                </RadioCards.Item>
+                <RadioCards.Item value="فارس نو" disabled>
+                  <Flex direction="column" width="100%">
+                    <Text weight="bold">سیمان پاکتی فارس نو</Text>
+                    <Text>ناموجود</Text>
+                  </Flex>
+                </RadioCards.Item>
+                <RadioCards.Item value="آبیک">
+                  <Flex direction="column" width="100%">
+                    <Text weight="bold">سیمان پاکتی آبیک</Text>
+                    <Text>قیمت هر پاکت: {abyekPrice} تومان</Text>
+                  </Flex>
+                </RadioCards.Item>
+                <RadioCards.Item value="لار">
+                  <Flex direction="column" width="100%">
+                    <Text weight="bold">سیمان سفید لار</Text>
+                    <Text>قیمت هر پاکت: {larPrice} تومان</Text>
+                  </Flex>
+                </RadioCards.Item>
+                <RadioCards.Item value="تناژ" disabled>
+                  <Flex direction="column" width="100%">
+                    <Text weight="bold">تناژ</Text>
+                    <Text>ناموجود</Text>
+                  </Flex>
+                </RadioCards.Item>
+              </RadioCards.Root>
+            </Box>
+            <Text size="4" weight="bold" className="mt-8">
+              حجم سفارش به پاکت:
+            </Text>
+            <Box>
+              {/* <RadioCards.Root defaultValue="1" columns={{ initial: "1", sm: "2" }} dir="rtl"> */}
+              <RadioCards.Root defaultValue="5" onValueChange={value => onVolumeChange(value)} columns="2" dir="rtl" color="green" name="volume">
+                <RadioCards.Item value="5">
+                  <Flex direction="column" width="100%">
+                    <Text weight="bold">۵</Text>
+                    {/* <Text>توضیحات بیشتر</Text> */}
+                  </Flex>
+                </RadioCards.Item>
+                <RadioCards.Item value="10">
+                  <Flex direction="column" width="100%">
+                    <Text weight="bold">۱۰</Text>
+                    {/* <Text>توضیحات بیشتر</Text> */}
+                  </Flex>
+                </RadioCards.Item>
+                <RadioCards.Item value="20">
+                  <Flex direction="column" width="100%">
+                    <Text weight="bold">۲۰</Text>
+                    {/* <Text>توضیحات بیشتر</Text> */}
+                  </Flex>
+                </RadioCards.Item>
+                <RadioCards.Item value="30">
+                  <Flex direction="column" width="100%">
+                    <Text weight="bold">۳۰</Text>
+                    {/* <Text>توضیحات بیشتر</Text> */}
+                  </Flex>
+                </RadioCards.Item>
+                <RadioCards.Item value="40">
+                  <Flex direction="column" width="100%">
+                    <Text weight="bold">۴۰</Text>
+                    {/* <Text>توضیحات بیشتر</Text> */}
+                  </Flex>
+                </RadioCards.Item>
+                <RadioCards.Item value="100" disabled>
+                  <Flex direction="column" width="100%">
+                    <Text weight="bold">حجم دلخواه</Text>
+                    {/* <Text>توضیحات بیشتر</Text> */}
+                  </Flex>
+                </RadioCards.Item>
+              </RadioCards.Root>
+            </Box>
+            {/* <Input name="price" defaultValue="0" /> */}
+            {/* <NumberInput title="پاکت" /> */}
+          </div>
+          {/* </form> */}
+          {/* <div className="flex justify-center items-center min-h-12 border border-dashed text-muted-foreground p-2 mt-8">
+            برای مشاهده بازار فروش در بالا مشخص کنید که چه کالایی را با چه حجمی می‌خواهید. دقت کنید که جستجوی بازار بر اساس آدرس تحویل کالا انجام می‌شود.
+          </div> */}
+          {/* <div className="mt-8">
+            <Text size="4" weight="bold" color="red">
+              بازار فروش:
+            </Text>
+            <RadioCards.Root defaultValue={orders[0].id} color="green" columns={{ initial: "1", sm: "1" }} dir="rtl" className="mt-4">
+              {orders.map((order) => (
+                <RadioCards.Item key={order.id} value={order.id}>
+                  <Flex direction="column" width="100%">
+                    <Text weight="bold">سیمان فارس - {order.price} تومان</Text>
+                    <Text>فروشگاه مصالح عباس پور</Text>
+                  </Flex>
+                </RadioCards.Item>)
+              )}
+            </RadioCards.Root>
+          </div> */}
+          {/* <CardContent> */}
+          <div className="text-lg font-bold mt-8">مقصد تحویل بار:</div>
+          {/* <RadioGroup defaultValue="txt" onValueChange={value => onChange(value)} color="green" dir="rtl" className="py-4">
+            <div className="flex items-center space-x-2 mt-2">
+              <RadioGroupItem value="txt" id="r1" />
+              <Label htmlFor="r1" className="pr-2 font-bold">آدرس نوشتاری</Label>
+            </div>
+            <div className="flex items-center space-x-2 mt-2">
+              <RadioGroupItem value="fav" id="r2" />
+              <Label htmlFor="r2" className="pr-2 font-bold">آدرس‌های منتخب</Label>
+            </div>
+            <div className="flex items-center space-x-2 mt-2">
+              <RadioGroupItem value="map" id="r3" />
+              <Label htmlFor="r3" className="pr-2 font-bold">بر روی نقشه</Label>
+            </div>
+          </RadioGroup> */}
+          {/* <RadioCards.Root defaultValue="map" onValueChange={value => onChange(value)} columns={{ initial: "2", md: "4" }} dir="rtl" color="green" className="py-4">
+            <RadioCards.Item value="txt" disabled>
+              <Flex direction="column" width="100%" className="min-h-10">
+                <Text weight="bold">آدرس نوشتاری</Text>
+              </Flex>
+            </RadioCards.Item>
+            <RadioCards.Item value="fav" disabled>
+              <Flex direction="column" width="100%" className="min-h-10">
+                <Text weight="bold">آدرس‌های منتخب</Text>
+              </Flex>
+            </RadioCards.Item>
+            <RadioCards.Item value="map">
+              <Flex direction="column" width="100%" className="min-h-10">
+                <Text weight="bold">بر روی نقشه</Text>
+              </Flex>
+            </RadioCards.Item>
+          </RadioCards.Root> */}
+          {/* <form> */}
+          <div className="grid w-full items-center gap-2 mt-4">
+            {addressType === "txt" &&
+              <div>
+                <Label htmlFor="name" className="text-md font-bold">آدرس نوشتاری:</Label>
+                <Input type="email" id="email" placeholder="آدرس..." className="mt-2" />
+              </div>
+            }
+            {/* <div className="flex flex-col space-y-1.5"> */}
+            {addressType === "fav" &&
+              <div>
+                <Label htmlFor="name" className="text-md font-bold mt-4">آدرس‌های منتخب:</Label>
+                <RadioCards.Root defaultValue="1" columns="2" dir="rtl" color="green" className="mt-4">
+                  <RadioCards.Item value="1">
+                    <Flex direction="column" width="100%">
+                      <Text weight="bold">تهران</Text>
+                      <Text>فرمانیه، کوچه سرو، پلاک ۲</Text>
+                    </Flex>
+                  </RadioCards.Item>
+                  <RadioCards.Item value="2">
+                    <Flex direction="column" width="100%">
+                      <Text weight="bold">شیراز</Text>
+                      <Text>پاسارگاد شمالی، کوچه کاج، پلاک ۱</Text>
+                    </Flex>
+                  </RadioCards.Item>
+                  <RadioCards.Item value="3">
+                    <Flex direction="column" width="100%">
+                      <Text weight="bold">صدرا</Text>
+                      <Text>بلوار مولانا، کوچه چنار، پلاک ۱</Text>
+                    </Flex>
+                  </RadioCards.Item>
+                  {/* <RadioCards.Item value="4" disabled>
+                    <Flex direction="column" width="100%">
+                      <Text weight="bold">روی نقشه</Text>
+                      <Text>انتخاب آدرس بر روی نقشه</Text>
+                    </Flex>
+                  </RadioCards.Item> */}
+                </RadioCards.Root>
+              </div>
+            }
+            {addressType === "map" &&
+              <div>
+                {/* <Label htmlFor="name" className="text-md font-bold mt-4">موقعیت تحویل بار:</Label> */}
+                <div className="relative -top-12 mt-4">
+                  <div className="relative top-8">
+                    <GeocodingControl apiKey={API_KEY} mapController={mapController} placeholder="جستجو..." />
+                  </div>
+                  <MapPin size={48} color="black" className="relative top-[150px] right-[calc(50%-25px)] z-40" />
+                  <Map
+                    ref={mapRef}
+                    onLoad={onMapLoad}
+                    initialViewState={{
+                      longitude: 51.33808144535957,
+                      latitude: 35.6997281290379,
+                      zoom: 15
+                    }}
+                    // initialViewState={{
+                    //   longitude: city === "tehran" ? 51.33808144535957 : 52.51980110816994,
+                    //   latitude: city === "tehran" ? 35.6997281290379 : 29.63149899491558,
+                    //   zoom: 15
+                    // }}
+                    // dragPan={false}
+                    style={{ width: "100%", height: 300 }}
+                    mapStyle='https://api.maptiler.com/maps/basic-v2/style.json?key=l2lhfToTYDJSlIPhOJ7E'
+                    // mapStyle="https://demotiles.maplibre.org/style.json"
+                    // mapStyle="https://s3.amazonaws.com/cdn.brianbancroft.io/assets/osmstyle.json"
+                    className="relative z-30"
+                  >
+                    <Marker longitude={lng} latitude={lat} anchor="bottom" >
+                      <MapPin size={48} color="red" />
+                      <span className="bg-white text-lg font-bold">
+                        مقصد بار
+                      </span>
+                    </Marker>
+                    <GeolocateControl position="bottom-right" />
+                  </Map>
+                  {/* طول جغرافیای: {lng} / عرض جغرافیای: {lat} */}
+                  <Button type="button" onClick={() => onConfirmAddress()} className="m-2">تایید مقصد</Button>
+                  <Button type="button" onClick={handleFindSuppliers} className="m-2" disabled={loading}>
+                    {loading ? 'جستجو...' : 'جستجوی فروشگاه‌ها'}
+                  </Button>
+                </div>
+              </div>
+            }
+            {/* </div> */}
+            {/* <Input name="price" defaultValue="0" /> */}
+            {/* <NumberInput title="پاکت" /> */}
+          </div>
+          {/* </form> */}
+          {/* <div className="flex justify-center items-center min-h-12 border border-dashed text-muted-foreground p-2 mt-8">
+            برای مشاهده بازار فروش در بالا مشخص کنید که چه کالایی را با چه حجمی می‌خواهید. دقت کنید که جستجوی بازار بر اساس آدرس تحویل کالا انجام می‌شود.
+          </div> */}
+          {/* <div className="mt-8">
+            <Text size="4" weight="bold" color="red">
+              بازار فروش:
+            </Text>
+            <RadioCards.Root defaultValue={orders[0].id} color="green" columns={{ initial: "1", sm: "1" }} dir="rtl" className="mt-4">
+              {orders.map((order) => (
+                <RadioCards.Item key={order.id} value={order.id}>
+                  <Flex direction="column" width="100%">
+                    <Text weight="bold">سیمان فارس - {order.price} تومان</Text>
+                    <Text>فروشگاه مصالح عباس پور</Text>
+                  </Flex>
+                </RadioCards.Item>)
+              )}
+            </RadioCards.Root>
+          </div> */}
+          {/* </CardContent> */}
+          <CardContent>
+            <form>
+              <div className="grid w-full items-center gap-2 mt-4">
+                <div className="flex flex-col space-y-1.5">
+                  {/* <Label htmlFor="name" className="text-md font-bold">پرداخت با موفقیت انجام شد!</Label> */}
+                  {/* خریدار:
+                  <ul>
+                    <li>52.52512720854634</li>
+                    <li>29.638097637450272</li>
+                  </ul> */}
+                  {/* <Separator /> */}
+                  فروشگاه ها:
+                  {loading ? (
+                    <Text>در حال جستجو...</Text>
+                  ) : suppliers.length > 0 ? (
+                    suppliers.map(s => (
+                      <div key={s.id} className="mt-2">
+                        <Text weight="bold">فروشگاه {s.id}</Text>
+                        <ul>
+                          <li>طول جغرافیایی: {s.lng}</li>
+                          <li>عرض جغرافیایی: {s.lat}</li>
+                        </ul>
+                      </div>
+                    ))
+                  ) : (
+                    <Text>هنوز فروشگاهی یافت نشد</Text>
+                  )}
+                </div>
+                {/* <Input name="price" defaultValue="0" /> */}
+                {/* <NumberInput title="کیسه" /> */}
+              </div>
+            </form>
+            {/* <div className="flex justify-center items-center min-h-12 border border-dashed text-muted-foreground p-2 mt-8">
+            برای مشاهده بازار فروش در بالا مشخص کنید که چه کالایی را با چه حجمی می‌خواهید. دقت کنید که جستجوی بازار بر اساس آدرس تحویل کالا انجام می‌شود.
+          </div> */}
+            {/* <div className="mt-8">
+            <Text size="4" weight="bold" color="red">
+              بازار فروش:
+            </Text>
+            <RadioCards.Root defaultValue={orders[0].id} color="green" columns={{ initial: "1", sm: "1" }} dir="rtl" className="mt-4">
+              {orders.map((order) => (
+                <RadioCards.Item key={order.id} value={order.id}>
+                  <Flex direction="column" width="100%">
+                    <Text weight="bold">سیمان فارس - {order.price} تومان</Text>
+                    <Text>فروشگاه مصالح عباس پور</Text>
+                  </Flex>
+                </RadioCards.Item>)
+              )}
+            </RadioCards.Root>
+          </div> */}
+          </CardContent>
+          <Text size="4" weight="bold" className="mt-8">
+            صورتحساب:
+          </Text>
+          {
+            type === "فارس" && <div className="mt-4">
+              <div className="my-2 text-muted-foreground">
+                شهر تحویل کالا: {city}<br />
+                قیمت سیمان پاکتی {type}: {farsPrice} تومان<br />
+                قیمت با تخفیف: {farsPrice - 3000} تومان<br />
+                حجم: {volume} پاکت
+              </div>
+              جمع کالا با تخفیف: {Number(volume) * (farsPrice - 3000)} تومان<br />
+              حمل و نقل: {fare} تومان
+              <Separator className="my-2" />
+              قابل پرداخت: {Number(volume) * (farsPrice - 3000) + fare} تومان
+            </div>
+          }
+          {
+            type === "آبیک" && <div className="mt-4">
+              <div className="my-2 text-muted-foreground">
+                قیمت سیمان پاکتی {type}: {abyekPrice} تومان<br />
+                قیمت با تخفیف: {abyekPrice - 3000} تومان<br />
+                حجم: {volume} پاکت
+              </div>
+              جمع کالا با تخفیف: {Number(volume) * (abyekPrice - 3000)} تومان<br />
+              حمل و نقل: {fare} تومان
+              <Separator className="my-2" />
+              قابل پرداخت: {Number(volume) * (abyekPrice - 3000) + fare} تومان
+            </div>
+          }
+          {
+            type === "لار" && <div className="mt-4">
+              <div className="my-2 text-muted-foreground">
+                قیمت سیمان پاکتی {type}: {larPrice} تومان<br />
+                قیمت با تخفیف: {larPrice - 3000} تومان<br />
+                حجم: {volume} پاکت
+              </div>
+              جمع کالا با تخفیف: {Number(volume) * (larPrice - 3000)} تومان<br />
+              حمل و نقل: {fare} تومان
+              <Separator className="my-2" />
+              قابل پرداخت: {Number(volume) * (larPrice - 3000) + fare} تومان
+            </div>
+          }
+        </CardContent>
+        <CardFooter className="flex justify-between">
+          {/* <Button variant="outline">لغو سفارش</Button> */}
+          <div />
+          {/* <Button style={{ backgroundColor: "green" }}>
+            <Link href="/customer">سفارش خرید</Link>
+          </Button> */}
+          <SubmitButton />
+        </CardFooter>
+      </Card>
+    </form>
+  )
+}

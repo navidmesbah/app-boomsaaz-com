@@ -1,0 +1,13 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# Next.js version 15 project
+
+- the project uses pnpm for package management.
+- The codebase uses drizzle-orm and postgres database.
+- Please use [schema.ts](mdc:lib/db/schema.ts) and [queries.ts](mdc:lib/db/queries.ts) for data modeling and editing queries
+- DO NOT implement queries directly in next.js action files, instead import them from [queries.ts](mdc:lib/db/queries.ts).
+- DO NOT implement or call queries directely in client components, instead use action files.

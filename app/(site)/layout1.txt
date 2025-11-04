@@ -1,0 +1,157 @@
+import Link from "next/link"
+
+import { Button } from "@/components/ui/button"
+import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet"
+
+import { ThemeToggle } from "@/components/theme-toggle"
+import { Equals } from "@phosphor-icons/react/dist/ssr"
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+
+import { User } from "@phosphor-icons/react/dist/ssr"
+
+interface ChatLayoutProps {
+  children: React.ReactNode;
+  params: {
+    id: string;
+  };
+}
+
+export default async function ChatLayout({ children, params }: ChatLayoutProps) {
+  return (
+    <div className="flex min-h-screen w-full flex-col">
+      {/* <header className="sticky top-0 border-b bg-background px-4"> */}
+      <header className="sticky top-0 bg-background px-4 z-50">
+        <div className="mx-auto w-full max-w-full md:max-w-[1024px] flex items-center h-11 gap-4">
+          <Link
+            href="/"
+            className="flex items-center h-11 gap-2 text-lg font-semibold md:text-base min-w-fit"
+          >
+            <svg
+              viewBox="0 0 1000 1000"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="size-5"
+            >
+              <rect width="1000" height="1000" fill="hsl(var(--foreground))" />
+              <circle cx="500" cy="500" r="300" fill="hsl(var(--background))" />
+            </svg>
+            {/* <span className="sr-only">Khandan Academy</span> */}
+            <span className="min-w-fit">Khandan Academy</span>
+          </Link>
+          <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center h-11 md:gap-5 md:text-sm lg:gap-6">
+            {["simulation", "research"].map(item =>
+              <Link
+                // href={`/playground/${item}/${routes[item as keyof routesType]?.[0]}`}
+                href={`/playground/${item}`}
+                className="text-muted-foreground hover:text-foreground"
+                key={item}
+              >
+                {item.charAt(0).toUpperCase() + item.slice(1)}
+              </Link>
+            )}
+          </nav>
+          <div className="flex items-center h-11 gap-1 ml-auto md:gap-2 lg:gap-4">
+            <ThemeToggle />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <User className="size-5" />
+                  <span className="sr-only">Toggle user menu</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {/* <DropdownMenuItem>Settings</DropdownMenuItem>
+                <DropdownMenuSeparator /> */}
+                <DropdownMenuItem>Login</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="shrink-0 md:hidden"
+                >
+                  <Equals size={24} />
+                  <span className="sr-only">Toggle navigation menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="overflow-y-scroll">
+                <nav className="grid gap-6 text-lg font-medium">
+                  {/* <Link
+                  href="#"
+                  className="flex items-center gap-2 text-lg font-semibold"
+                >
+                  <svg viewBox="0 0 1000 1000" fill="none" className="size-4"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <rect width="1000" height="1000" fill="hsl(var(--foreground))" />
+                    <path d="M500 800L240.192 350L759.808 350L500 800Z" fill="hsl(var(--background))" />
+                  </svg>
+                  <span className="sr-only">Khandan Academy</span>
+                </Link> */}
+                  {["simulation", "research"].map(item =>
+                    <>
+                      {/* close sheet on action */}
+                      <SheetClose asChild key={item}>
+                        {/* <Link
+                        href={`/playground/${item}/${routes[item as keyof routesType]?.[0]}`}
+                        className="text-muted-foreground hover:text-foreground"
+                      > */}
+                        <Link
+                          href={`/playground/${item}`}
+                          className="text-muted-foreground hover:text-foreground"
+                        >
+                          {item.charAt(0).toUpperCase() + item.slice(1)}
+                        </Link>
+                      </SheetClose>
+                      {/* <nav
+                      className="grid gap-4 text-sm text-muted-foreground mb-8" x-chunk="playground-04-chunk-0"
+                    >
+                      {
+                        routes[item as keyof routesType]?.map(i =>
+                          <SheetClose asChild key={i}>
+                            <Link href={`/playground/${item}/${i}`}>{i.charAt(0).toUpperCase() + i.slice(1)}</ Link>
+                          </SheetClose >
+                        )
+                      }
+                    </nav> */}
+                    </>
+                  )}
+                </nav>
+              </SheetContent>
+            </Sheet>
+          </div>
+        </div>
+      </header>
+      <main className="flex min-h-[calc(100vh_-_theme(spacing.16))] flex-1 flex-col gap-6 bg-muted/40 p-4 md:gap-8 md:p-10">
+        {/* <div className="mx-auto grid w-full max-w-7xl gap-2 mt-4 md:mt-0">
+          <h1 className="text-3xl font-semibold">{params.id.charAt(0).toUpperCase() + params.id.slice(1)}</h1>
+        </div> */}
+        {/* <div className="mx-auto grid w-full max-w-7xl items-start gap-4 md:grid-cols-[180px_1fr] lg:grid-cols-[250px_1fr]"> */}
+        <div className="mx-auto w-full max-w-[2560px]">
+          {children}
+        </div>
+      </main>
+    </div>
+  )
+}
+
+interface routesType {
+  simulation: string[];
+  research: string[];
+}
+
+const routes: routesType = {
+  simulation: ["markets", "news"],
+  research: ["chat", "trends"],
+}
